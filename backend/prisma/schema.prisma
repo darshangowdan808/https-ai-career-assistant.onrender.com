@@ -1,0 +1,265 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String             @id @default(uuid())
+  email        String             @unique
+  passwordHash String
+  name         String
+  role         String             @default("USER") // USER, ADMIN
+  phone        String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  profile      CandidateProfile?
+  resumes      Resume[]
+  savedJobs    SavedJob[]
+  applications JobApplication[]
+  interviews   InterviewSession[]
+  learningPlans LearningPlan[]
+}
+
+model CandidateProfile {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  headline          String?
+  bio               String?
+  education         String?
+  graduationYear    Int?
+  experienceYears   Float    @default(0)
+  currentRole       String?
+  preferredRoles    String?  // JSON array string
+  skills            String?  // JSON array string
+  preferredLocations String? // JSON array string
+  expectedSalaryLpa Float?
+  employmentTypes   String?  // JSON array string
+  resumeUrl         String?
+  profileCompleted  Int      @default(20) // Percentage
+  updatedAt         DateTime @updatedAt
+}
+
+model Resume {
+  id             String          @id @default(uuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  originalName   String
+  mimeType       String
+  fileSize       Int
+  rawText        String
+  parsedDataJson String?         // Structured parsed sections
+  createdAt      DateTime        @default(now())
+  analyses       ResumeAnalysis[]
+  skills         ExtractedSkill[]
+}
+
+model ResumeAnalysis {
+  id                   String   @id @default(uuid())
+  resumeId             String
+  resume               Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  targetRole           String
+  targetJobDesc        String?
+  overallScore         Int      // 0 - 100
+  sectionScoresJson    String   // JSON of scores per section
+  matchedSkillsJson    String   // JSON array of matched skills
+  missingSkillsJson    String   // JSON array of missing skills
+  warningsJson         String   // JSON array of formatting/ATS warnings
+  strengthsJson        String   // JSON array of strengths
+  weaknessesJson       String   // JSON array of weaknesses
+  recommendationsJson  String   // JSON array of prioritized recommendations
+  improvedSummary      String?  // AI improved summary
+  improvedBulletsJson  String?  // JSON array of rewritten bullets
+  createdAt            DateTime @default(now())
+}
+
+model ExtractedSkill {
+  id          String   @id @default(uuid())
+  resumeId    String
+  resume      Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  skillName   String
+  category    String   @default("Technical")
+  proficiency String   @default("Intermediate")
+  confidence  Float    @default(1.0)
+}
+
+model Job {
+  id                 String           @id @default(uuid())
+  externalId         String?          @unique
+  provider           String           @default("VERIFIED_CATALOG") // ARBEITNOW, ADZUNA, VERIFIED_CATALOG, DEMO
+  title              String
+  company            String
+  companyLogo        String?
+  location           String
+  city               String
+  workMode           String           @default("HYBRID") // ON_SITE, HYBRID, REMOTE
+  employmentType     String           @default("FULL_TIME") // FULL_TIME, INTERNSHIP, PART_TIME, CONTRACT
+  experienceMin      Int              @default(0)
+  experienceMax      Int              @default(3)
+  salaryMinLpa       Float?
+  salaryMaxLpa       Float?
+  salaryDisclosed    Boolean          @default(true)
+  skillsRequiredJson String           // JSON array string
+  description        String
+  responsibilities   String?
+  qualifications     String?
+  sourceUrl          String
+  applicationType    String           @default("EXTERNAL") // EXTERNAL, DIRECT
+  isDemo             Boolean          @default(false)
+  isActive           Boolean          @default(true)
+  postedAt           DateTime         @default(now())
+  verifiedAt         DateTime         @default(now())
+  createdAt          DateTime         @default(now())
+  savedBy            SavedJob[]
+  applications       JobApplication[]
+}
+
+model JobProvider {
+  id                 String    @id @default(uuid())
+  name               String
+  code               String    @unique
+  isEnabled          Boolean   @default(true)
+  syncFrequencyHours Int       @default(12)
+  lastSyncAt         DateTime?
+  syncStatus         String    @default("IDLE") // IDLE, RUNNING, SUCCESS, ERROR
+  errorLog           String?
+  configJson         String?
+  createdAt          DateTime  @default(now())
+}
+
+model SavedJob {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, jobId])
+}
+
+model JobApplication {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  status    String   @default("INTERESTED") // INTERESTED, APPLIED, ASSESSMENT, INTERVIEW, OFFER, REJECTED
+  appliedAt DateTime @default(now())
+  notes     String?
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, jobId])
+}
+
+model InterviewSession {
+  id              String             @id @default(uuid())
+  userId          String
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetRole      String
+  targetCompany   String?
+  jobDescription  String?
+  difficulty      String             @default("MEDIUM") // EASY, MEDIUM, HARD
+  mode            String             @default("TEXT")   // TEXT, VOICE
+  durationMinutes Int                @default(45)
+  currentRound    Int                @default(1)
+  status          String             @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, ABANDONED
+  overallScore    Float?
+  passStatus      String             @default("PENDING") // PENDING, PASSED, FAILED
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  rounds          InterviewRound[]
+  results         AssessmentResult[]
+}
+
+model InterviewRound {
+  id             String              @id @default(uuid())
+  sessionId      String
+  session        InterviewSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  roundNumber    Int                 // 1: Intro, 2: Aptitude, 3: Technical, 4: HR
+  roundName      String
+  status         String              @default("LOCKED") // LOCKED, NOT_STARTED, IN_PROGRESS, COMPLETED, FAILED
+  score          Float?
+  passingScore   Float               @default(70.0)
+  feedback       String?
+  evaluationJson String?             // Rubric breakdown
+  startedAt      DateTime?
+  completedAt    DateTime?
+  questions      InterviewQuestion[]
+}
+
+model InterviewQuestion {
+  id            String            @id @default(uuid())
+  roundId       String
+  round         InterviewRound    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  questionIndex Int
+  questionText  String
+  questionType  String            @default("TEXT") // TEXT, MCQ, CODING
+  optionsJson   String?           // For MCQ: JSON array of 4 options
+  correctAnswer String?           // Stored privately for server-side grading
+  explanation   String?           // Explanation revealed after submission
+  rubricJson    String?           // Criteria for subjective grading
+  difficulty    String            @default("MEDIUM")
+  answers       InterviewAnswer[]
+}
+
+model InterviewAnswer {
+  id                String            @id @default(uuid())
+  questionId        String
+  question          InterviewQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  userId            String
+  answerText        String?
+  selectedOption    String?
+  score             Float             @default(0.0)
+  aiFeedback        String?
+  timeTakenSeconds  Int               @default(0)
+  submittedAt       DateTime          @default(now())
+}
+
+model AssessmentResult {
+  id                   String           @id @default(uuid())
+  sessionId            String
+  session              InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  roundNumber          Int
+  strengthsJson        String
+  weaknessesJson       String
+  skillGapsJson        String
+  recommendationsJson  String
+  createdAt            DateTime         @default(now())
+}
+
+model LearningPlan {
+  id                 String             @id @default(uuid())
+  userId             String
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleTarget         String
+  prioritySkillsJson String             // JSON array of target skills
+  resourcesJson      String             // Curated genuine courses/docs
+  projectIdeasJson   String             // Hands-on project blueprints
+  timelineWeeks      Int                @default(6)
+  status             String             @default("ACTIVE")
+  createdAt          DateTime           @default(now())
+  progressItems      LearningProgress[]
+}
+
+model LearningProgress {
+  id              String       @id @default(uuid())
+  learningPlanId  String
+  learningPlan    LearningPlan @relation(fields: [learningPlanId], references: [id], onDelete: Cascade)
+  skillName       String
+  status          String       @default("NOT_STARTED") // NOT_STARTED, IN_PROGRESS, COMPLETED
+  progressPercent Int          @default(0)
+  notes           String?
+}
+
+model AdminSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}

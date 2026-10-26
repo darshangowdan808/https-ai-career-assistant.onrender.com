@@ -1,0 +1,22 @@
+{
+  "name": "ai-career-assistant",
+  "version": "1.0.0",
+  "description": "AI-Powered Career Intelligence, India Tech Job Portal & 5-Round Mock Interview Platform",
+  "scripts": {
+    "install:all": "npm install --prefix backend && npm install --prefix frontend",
+    "build": "npm run build --prefix frontend && npm run build --prefix backend",
+    "start": "npm start --prefix backend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "test": "npm test --prefix backend"
+  },
+  "keywords": [
+    "ai-career-assistant",
+    "job-portal",
+    "mock-interviews",
+    "dsa",
+    "india-tech-jobs"
+  ],
+  "author": "AI Career Assistant Team",
+  "license": "MIT"
+}
