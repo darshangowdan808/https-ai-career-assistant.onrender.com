@@ -49,22 +49,24 @@ app.use('/api/interviews', interviewRoutes);
 app.use('/api/learning', learningRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Serve Frontend Static Assets (Production / Unified Mode)
-const possibleFrontendPaths = [
+// Serve frontend static build in production if available
+const candidateFrontendPaths = [
   path.resolve(__dirname, '../../frontend/dist'),
-  path.resolve(__dirname, '../frontend/dist'),
-  path.resolve(process.cwd(), 'frontend/dist'),
   path.resolve(process.cwd(), '../frontend/dist'),
+  path.resolve(process.cwd(), 'frontend/dist'),
 ];
-const frontendDistPath = possibleFrontendPaths.find(p => fs.existsSync(p));
-if (frontendDistPath) {
-  app.use(express.static(frontendDistPath));
-  app.get('*', (req: Request, res: Response) => {
-    if (req.path.startsWith('/api')) {
-      return res.status(404).json({ success: false, error: 'API route not found' });
-    }
-    res.sendFile(path.join(frontendDistPath, 'index.html'));
-  });
+
+for (const candidatePath of candidateFrontendPaths) {
+  if (fs.existsSync(candidatePath)) {
+    app.use(express.static(candidatePath));
+    app.get('*', (req: Request, res: Response, next: NextFunction) => {
+      if (req.path.startsWith('/api')) {
+        return next();
+      }
+      res.sendFile(path.join(candidatePath, 'index.html'));
+    });
+    break;
+  }
 }
 
 // Global Error Handler
