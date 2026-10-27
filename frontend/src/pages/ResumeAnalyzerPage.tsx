@@ -287,7 +287,7 @@ export const ResumeAnalyzerPage: React.FC = () => {
                 <h3>Matched Skills Detected ({analysis.matchedSkills.length})</h3>
               </div>
               <div className="flex flex-wrap gap-2">
-                {analysis.matchedSkills.map((skill, idx) => (
+                {analysis.matchedSkills.map((skill: string, idx: number) => (
                   <span
                     key={idx}
                     className="px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"
@@ -308,7 +308,7 @@ export const ResumeAnalyzerPage: React.FC = () => {
                 <h3>Recommended Missing Keywords ({analysis.missingSkills.length})</h3>
               </div>
               <div className="flex flex-wrap gap-2">
-                {analysis.missingSkills.map((skill, idx) => (
+                {analysis.missingSkills.map((skill: string, idx: number) => (
                   <span
                     key={idx}
                     className="px-3 py-1 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200"
@@ -331,7 +331,7 @@ export const ResumeAnalyzerPage: React.FC = () => {
                 <h3>Formatting & Parsing Notices ({analysis.warnings.length})</h3>
               </div>
               <ul className="space-y-1.5 text-xs text-amber-900 list-disc list-inside">
-                {analysis.warnings.map((warn, idx) => (
+                {analysis.warnings.map((warn: string, idx: number) => (
                   <li key={idx}>{warn}</li>
                 ))}
               </ul>
@@ -345,7 +345,7 @@ export const ResumeAnalyzerPage: React.FC = () => {
                 Resume Strengths
               </h3>
               <ul className="space-y-2 text-xs text-slate-600">
-                {analysis.strengths.map((str, idx) => (
+                {analysis.strengths.map((str: string, idx: number) => (
                   <li key={idx} className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                     <span>{str}</span>
@@ -359,7 +359,7 @@ export const ResumeAnalyzerPage: React.FC = () => {
                 Prioritized Action Items
               </h3>
               <ul className="space-y-2 text-xs text-slate-600">
-                {analysis.recommendations.map((rec, idx) => (
+                {analysis.recommendations.map((rec: string, idx: number) => (
                   <li key={idx} className="flex items-start gap-2">
                     <ArrowRight className="w-4 h-4 text-brand-600 shrink-0 mt-0.5" />
                     <span>{rec}</span>
@@ -407,7 +407,7 @@ export const ResumeAnalyzerPage: React.FC = () => {
                   Impact-Driven Bullet Rewrites (Google X-Y-Z Formula):
                 </h4>
                 <div className="space-y-2">
-                  {analysis.improvedBullets.map((bullet, idx) => (
+                  {analysis.improvedBullets.map((bullet: string, idx: number) => (
                     <div
                       key={idx}
                       className="p-3 bg-white rounded-xl border border-slate-200 text-xs text-slate-700 flex items-start gap-2.5"
